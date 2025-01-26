@@ -17,7 +17,7 @@ const port = process.env.PORT ||  4001;
 app.use(express.json());
 app.use(
     cors({
-      origin: "http://localhost:3000",
+      origin: "https://quiet-kitsune-35e796.netlify.app/",
       credentials: true,
     })
   );
