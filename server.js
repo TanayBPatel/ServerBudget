@@ -11,27 +11,27 @@ import Schema from './schema/dbschema.js';
 dotenv.config();
 
 const app = express();
-const port = 4000;
+const port = process.env.PORT ||  4001;
 
 // Middleware
 app.use(express.json());
 app.use(
     cors({
-      origin: 'https://one-1r62.onrender.com', // Replace with your frontend's deployed URL
+      origin: "http://localhost:3000",
       credentials: true,
     })
   );
 
-const __dirname = path.resolve();
+// const __dirname = path.resolve();
 
-// Serve static files in production
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, './build')));
+// // Serve static files in production
+// if (process.env.NODE_ENV === 'production') {
+//   app.use(express.static(path.join(__dirname, '../frontend/build')));
 
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend', 'build', 'index.html'));
-  });
-}
+//   app.get('*', (req, res) => {
+//     res.sendFile(path.join(__dirname, '../frontend', 'build', 'index.html'));
+//   });
+// }
 
 // Database connection
 dbconnection();
