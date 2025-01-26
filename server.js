@@ -1,36 +1,71 @@
-const express= require('express');
-const app= express();
-require('dotenv').config();
-const port =  process.env.PORT || 3001;
-const dbconnection = require('./model/dbconnection')
-const Schema = require("./schema/dbschema.js");
-const asyncHandler = require("express-async-handler");
-const cors = require('cors');
+import express from 'express';
+import path from 'path';
+import dotenv from 'dotenv';
+import asyncHandler from 'express-async-handler';
+import cors from 'cors';
+
+// Custom imports
+import dbconnection from './model/dbconnection.js';
+import Schema from './schema/dbschema.js';
+
+dotenv.config();
+
+const app = express();
+const port = 4000;
+
+// Middleware
+app.use(express.json());
+app.use(
+    cors({
+      origin: 'https://one-1r62.onrender.com', // Replace with your frontend's deployed URL
+      credentials: true,
+    })
+  );
+
+const __dirname = path.resolve();
+
+// Serve static files in production
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../frontend/build')));
+
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend', 'build', 'index.html'));
+  });
+}
+
+// Database connection
 dbconnection();
 
-app.use(express.json())
-app.use(cors({ origin: '*' })); 
-app.get('/',asyncHandler(async(req,res)=>{
+// Routes
+app.get(
+  '/',
+  asyncHandler(async (req, res) => {
     const all = await Schema.find();
     res.status(200).json(all);
-}))
+  })
+);
 
-app.post('/',asyncHandler(async(req,res)=>{
+app.post(
+  '/',
+  asyncHandler(async (req, res) => {
     const { name, latitude, longitude } = req.body;
     const newPost = new Schema({
-        name,
-        latitude,
-        longitude,
+      name,
+      latitude,
+      longitude,
     });
 
     await newPost.save();
     res.status(201).json(newPost);
-}))
+  })
+);
 
-app.put('/:id',asyncHandler(async(req,res)=>{
-    const putContact = await Schema.findById(req.params.id);
-    if (!putContact) {
-        return res.status(404).json({ message: "No location found" });
+app.put(
+  '/:id',
+  asyncHandler(async (req, res) => {
+    const contact = await Schema.findById(req.params.id);
+    if (!contact) {
+      return res.status(404).json({ message: 'No location found' });
     }
 
     contact.name = req.body.name || contact.name;
@@ -39,66 +74,10 @@ app.put('/:id',asyncHandler(async(req,res)=>{
 
     await contact.save();
     res.status(200).json(contact);
-}))
+  })
+);
 
-
-// const getContact = asyncHandler ( async(req,res)=>{
-
-//     const contact = await ContactsBackend.find({user_id: req.user.id});
-//     res.status(200).json(contact);
-// });
-
-// const getAContact = asyncHandler(async (req, res) => {
-//     const contact = await ContactsBackend.findById(req.params.id);
-//     if (!contact) {
-//         return res.status(404).json({ message: "Contact not found" });
-//     }
-//     res.status(200).json(contact);
-// });
-
-
-// const postContact = asyncHandler(async (req, res) => {
-//     const { name, phone, email } = req.body;
-//     const newContact = new ContactsBackend({
-//         name,
-//         phone,
-//         email,
-//         user_id : req.user.id
-//     });
-
-//     await newContact.save();
-//     res.status(201).json(newContact);
-// });
-
-
-// const putContact = asyncHandler(async (req, res) => {
-//     const contact = await ContactsBackend.findById(req.params.id);
-//     if (!contact) {
-//         return res.status(404).json({ message: "Contact not found" });
-//     }
-
-//     contact.name = req.body.name || contact.name;
-//     contact.phone = req.body.phone || contact.phone;
-//     contact.email = req.body.email || contact.email;
-
-//     await contact.save();
-//     res.status(200).json(contact);
-// });
-
-
-// const deleteContact = asyncHandler(async (req, res) => {
-//     const contact = await ContactsBackend.findById(req.params.id);
-//     if (!contact) {
-//         return res.status(404).json({ message: "Contact not found" });
-//     }
-
-//     await ContactsBackend.findByIdAndDelete(req.params.id);
-//     res.status(200).json({ message: "Contact deleted" });
-// });
-
-
-// module.exports = {getAContact , getContact , postContact, putContact , deleteContact};
-
-app.listen(port ,()=>{
-    console.log(`Server listening at ${port} `)
-} )
+// Server
+app.listen(port, () => {
+  console.log(`Server listening at ${port}`);
+});
