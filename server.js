@@ -6,33 +6,21 @@ import cors from 'cors';
 
 // Custom imports
 import dbconnection from './model/dbconnection.js';
-import Schema from './schema/dbschema.js';
+import Schema from './schema/dbschema.js'; // This is your User model
 
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT ||  4001;
+const port = process.env.PORT || 4001;
 
 // Middleware
 app.use(express.json());
 app.use(
-    cors({
-      origin: "*"
-    })
-  );
+  cors({
+    origin: "*",
+  })
+);
 
-// const __dirname = path.resolve();
-
-// // Serve static files in production
-// if (process.env.NODE_ENV === 'production') {
-//   app.use(express.static(path.join(__dirname, '../frontend/build')));
-
-//   app.get('*', (req, res) => {
-//     res.sendFile(path.join(__dirname, '../frontend', 'build', 'index.html'));
-//   });
-// }
-
-// Database connection
 dbconnection();
 
 // Routes
@@ -43,36 +31,67 @@ app.get(
     res.status(200).json(all);
   })
 );
-
-app.post(
-  '/',
+app.get(
+  '/by-clerk-id',
   asyncHandler(async (req, res) => {
-    const { name, latitude, longitude } = req.body;
-    const newPost = new Schema({
-      name,
-      latitude,
-      longitude,
-    });
+    const { clerkUserId } = req.query;
 
-    await newPost.save();
-    res.status(201).json(newPost);
+    if (!clerkUserId) {
+      return res.status(400).json({ error: 'clerkUserId is required' });
+    }
+
+    const user = await Schema.findOne({ clerkUserId });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.status(200).json(user);
   })
 );
 
-app.put(
-  '/:id',
+// POST /users
+app.post(
+  '/users',
   asyncHandler(async (req, res) => {
-    const contact = await Schema.findById(req.params.id);
-    if (!contact) {
-      return res.status(404).json({ message: 'No location found' });
+    const { clerkUserId } = req.body;
+
+    // Validate input
+    if (!clerkUserId) {
+      return res.status(400).json({ message: 'clerkUserId is required' });
     }
 
-    contact.name = req.body.name || contact.name;
-    contact.latitude = req.body.latitude || contact.latitude;
-    contact.longitude = req.body.longitude || contact.longitude;
+    // Check if user already exists
+    let existingUser = await Schema.findOne({ clerkUserId });
+    if (existingUser) {
+      return res.status(400).json({ message: 'User already exists' });
+    }
 
-    await contact.save();
-    res.status(200).json(contact);
+    const newUser = new Schema({ clerkUserId });
+    await newUser.save();
+
+    res.status(201).json(newUser);
+  })
+);
+
+// PUT /users/:clerkUserId
+app.put(
+  '/users/:clerkUserId',
+  asyncHandler(async (req, res) => {
+    const { clerkUserId } = req.params;
+    const updateData = req.body;
+
+    const updatedUser = await Schema.findOneAndUpdate(
+      { clerkUserId },
+      { ...updateData, updatedAt: Date.now() },
+      { new: true, runValidators: true, upsert: false }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json(updatedUser);
   })
 );
 
