@@ -209,7 +209,7 @@ app.post(
   '/',
   asyncHandler(async (req, res) => {
     const { clerkUserId } = req.body;
-
+console.log(clerkUserId);
     if (!clerkUserId) {
       return res.status(400).json({ error: 'User ID is required' });
     }
