@@ -198,9 +198,9 @@ app.delete('/transactions/delete', asyncHandler(async (req, res) => {
 app.get(
   '/',
   asyncHandler(async (req, res) => {
-    console.log(clerkUserId);
     const allUsers = await UserBudget.find();
     res.status(200).json(allUsers);
+    console.log(allUsers);
   })
 );
 
