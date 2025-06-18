@@ -10,7 +10,7 @@ import  UserBudget  from './schema/dbschema.js'; // Import UserBudget model
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT || 5005;
+const port = process.env.PORT ;
 
 // Middleware
 app.use(express.json());
